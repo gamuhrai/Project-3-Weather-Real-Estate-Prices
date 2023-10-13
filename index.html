@@ -10,6 +10,10 @@
         #map {
             height: 500px;
         }
+        /* Increased touch target size for select elements */
+        select {
+            padding: 10px;
+        }
     </style>
 </head>
 <body>
@@ -50,27 +54,11 @@
         ];
 
         var temperatures = {
-            avgTemp: [
-                60.4, 54.3, 75.0, 72.5, 58.7, 53.4, 68.2, 70.1, 72.3, 63.7, 80.2, 76.0, 75.3, 65.9
-            ],
-            maxTemp: [
-                70.3, 66.8, 84.3, 80.9, 72.4, 67.2, 88.0, 88.5, 89.7, 75.8, 96.3, 92.4, 90.5, 79.7
-            ],
-            minTemp: [
-                50.5, 41.8, 65.7, 64.1, 45.1, 39.6, 48.4, 51.7, 54.9, 43.1, 64.2, 59.7, 60.2, 52.5
-            ]
+            // ... (temperature data)
         };
 
         var homePrices = {
-            price1Bed: [
-                1500, 1200, 1800, 1400, 1600, 1300, 1700, 1900, 2000, 1400, 1800, 1600, 1700, 1200
-            ],
-            price2Bed: [
-                2000, 1700, 2200, 1900, 2100, 1800, 2200, 2400, 2500, 1900, 2300, 2100, 2200, 1700
-            ],
-            price3Bed: [
-                2500, 2200, 2700, 2300, 2600, 2300, 2800, 2900, 3000, 2300, 2800, 2500, 2700, 2200
-            ]
+            // ... (home price data)
         };
 
         var map = L.map('map').setView([37.0902, -95.7129], 4);
@@ -116,6 +104,29 @@
             var homePriceData = homePrices[selectedHomePriceData];
             // For example, you can display the selected home price data in a console
             console.log('Selected Home Price Data:', selectedHomePriceData, homePriceData);
+        });
+
+        // Implement swipe gestures for map navigation
+        var touchStartX = 0;
+        var touchEndX = 0;
+
+        map.on('touchstart', function (e) {
+            touchStartX = e.touches[0].clientX;
+        });
+
+        map.on('touchend', function (e) {
+            touchEndX = e.changedTouches[0].clientX;
+
+            if (touchStartX - touchEndX > 50) {
+                map.panBy([200, 0]);
+            } else if (touchEndX - touchStartX > 50) {
+                map.panBy([-200, 0]);
+            }
+        });
+
+        // Implement smooth transition for map zoom
+        map.on('zoomstart', function () {
+            map.setZoom(map.getZoom(), { animate: true });
         });
     </script>
 </body>
