@@ -17,6 +17,18 @@
     <div>
         <label for="citySelector">Select a city:</label>
         <select id="citySelector"></select>
+        <label for="tempSelector">Select temperature data:</label>
+        <select id="tempSelector">
+            <option value="avgTemp">Average Temperature</option>
+            <option value="maxTemp">Max Temperature</option>
+            <option value="minTemp">Min Temperature</option>
+        </select>
+        <label for="homePriceSelector">Select home prices:</label>
+        <select id="homePriceSelector">
+            <option value="price1Bed">1 Bedroom Price</option>
+            <option value="price2Bed">2 Bedroom Price</option>
+            <option value="price3Bed">3 Bedroom Price</option>
+        </select>
     </div>
 
     <script>
@@ -34,8 +46,32 @@
             { name: 'Seattle, WA', latlng: [47.6062, -122.3321] },
             { name: 'Phoenix, AZ', latlng: [33.4484, -112.0740] },
             { name: 'Las Vegas, NV', latlng: [36.1699, -115.1398] },
-            { name: 'Denver, CO', latlng: [39.7392, -104.9903] }  // Denver, CO
+            { name: 'Denver, CO', latlng: [39.7392, -104.9903] }
         ];
+
+        var temperatures = {
+            avgTemp: [
+                60.4, 54.3, 75.0, 72.5, 58.7, 53.4, 68.2, 70.1, 72.3, 63.7, 80.2, 76.0, 75.3, 65.9
+            ],
+            maxTemp: [
+                70.3, 66.8, 84.3, 80.9, 72.4, 67.2, 88.0, 88.5, 89.7, 75.8, 96.3, 92.4, 90.5, 79.7
+            ],
+            minTemp: [
+                50.5, 41.8, 65.7, 64.1, 45.1, 39.6, 48.4, 51.7, 54.9, 43.1, 64.2, 59.7, 60.2, 52.5
+            ]
+        };
+
+        var homePrices = {
+            price1Bed: [
+                1500, 1200, 1800, 1400, 1600, 1300, 1700, 1900, 2000, 1400, 1800, 1600, 1700, 1200
+            ],
+            price2Bed: [
+                2000, 1700, 2200, 1900, 2100, 1800, 2200, 2400, 2500, 1900, 2300, 2100, 2200, 1700
+            ],
+            price3Bed: [
+                2500, 2200, 2700, 2300, 2600, 2300, 2800, 2900, 3000, 2300, 2800, 2500, 2700, 2200
+            ]
+        };
 
         var map = L.map('map').setView([37.0902, -95.7129], 4);
 
@@ -47,6 +83,8 @@
         var markersLayer = L.layerGroup().addTo(map);
 
         var citySelector = document.getElementById('citySelector');
+        var tempSelector = document.getElementById('tempSelector');
+        var homePriceSelector = document.getElementById('homePriceSelector');
 
         cities.forEach(function(city, index) {
             var option = document.createElement('option');
@@ -62,6 +100,22 @@
             var selectedIndex = citySelector.value;
             var selectedCity = cities[selectedIndex];
             map.setView(selectedCity.latlng, 12);
+        });
+
+        tempSelector.addEventListener('change', function () {
+            var selectedTempData = tempSelector.value;
+            // You can use the selected temperature data here
+            var temperatureData = temperatures[selectedTempData];
+            // For example, you can display the selected temperature data in a console
+            console.log('Selected Temperature Data:', selectedTempData, temperatureData);
+        });
+
+        homePriceSelector.addEventListener('change', function () {
+            var selectedHomePriceData = homePriceSelector.value;
+            // You can use the selected home price data here
+            var homePriceData = homePrices[selectedHomePriceData];
+            // For example, you can display the selected home price data in a console
+            console.log('Selected Home Price Data:', selectedHomePriceData, homePriceData);
         });
     </script>
 </body>
