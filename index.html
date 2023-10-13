@@ -33,7 +33,8 @@
             { name: 'San Francisco, CA', latlng: [37.7749, -122.4194] },
             { name: 'Seattle, WA', latlng: [47.6062, -122.3321] },
             { name: 'Phoenix, AZ', latlng: [33.4484, -112.0740] },
-            { name: 'Las Vegas, NV', latlng: [36.1699, -115.1398] }
+            { name: 'Las Vegas, NV', latlng: [36.1699, -115.1398] },
+            { name: 'Denver, CO', latlng: [39.7392, -104.9903] }  // Denver, CO
         ];
 
         var map = L.map('map').setView([37.0902, -95.7129], 4);
@@ -53,7 +54,6 @@
             option.textContent = city.name;
             citySelector.appendChild(option);
 
-            // Create markers and add them to the markersLayer
             var marker = L.marker(city.latlng).bindPopup(city.name);
             markersLayer.addLayer(marker);
         });
