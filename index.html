@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>City Marker Map</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <style>
+        #map {
+            height: 500px;
+        }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    <div>
+        <label for="citySelector">Select a city:</label>
+        <select id="citySelector"></select>
+    </div>
+
+    <script>
+        var cities = [
+            { name: 'New York City, NY', latlng: [40.7128, -74.0060] },
+            { name: 'Boston, MA', latlng: [42.3601, -71.0589] },
+            { name: 'Miami, FL', latlng: [25.7617, -80.1918] },
+            { name: 'Atlanta, GA', latlng: [33.7490, -84.3880] },
+            { name: 'Chicago, IL', latlng: [41.8781, -87.6298] },
+            { name: 'Minneapolis, MN', latlng: [44.9778, -93.2650] },
+            { name: 'Dallas, TX', latlng: [32.7767, -96.7970] },
+            { name: 'Houston, TX', latlng: [29.7604, -95.3698] },
+            { name: 'Los Angeles, CA', latlng: [34.0522, -118.2437] },
+            { name: 'San Francisco, CA', latlng: [37.7749, -122.4194] },
+            { name: 'Seattle, WA', latlng: [47.6062, -122.3321] },
+            { name: 'Phoenix, AZ', latlng: [33.4484, -112.0740] },
+            { name: 'Las Vegas, NV', latlng: [36.1699, -115.1398] }
+        ];
+
+        var map = L.map('map').setView([37.0902, -95.7129], 4);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        var markersLayer = L.layerGroup().addTo(map);
+
+        var citySelector = document.getElementById('citySelector');
+
+        cities.forEach(function(city, index) {
+            var option = document.createElement('option');
+            option.value = index;
+            option.textContent = city.name;
+            citySelector.appendChild(option);
+
+            // Create markers and add them to the markersLayer
+            var marker = L.marker(city.latlng).bindPopup(city.name);
+            markersLayer.addLayer(marker);
+        });
+
+        citySelector.addEventListener('change', function () {
+            var selectedIndex = citySelector.value;
+            var selectedCity = cities[selectedIndex];
+            map.setView(selectedCity.latlng, 12);
+        });
+    </script>
+</body>
+</html>
