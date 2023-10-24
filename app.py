@@ -1,31 +1,36 @@
-from flask import Flask, render_template, jsonify
+from flask import Flask, render_template, jsonify, send_file
+import sqlite3
 from flask_sqlalchemy import SQLAlchemy
 import plotly
 import plotly.graph_objs as go
 import json
+from datetime import datetime
+
+
+
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_BINDS'] = {
-    'homevalue': 'sqlite:///home_data.db',
-    'temperature': 'sqlite:///temperature_data.db'
+    'homevalue': 'sqlite:///home.db',
+    'temperature': 'sqlite:///temp.db'
 }
 db = SQLAlchemy(app)
 
 class HomeValue(db.Model):
     __bind_key__ = 'homevalue'
-    __tablename__ = 'home_data'  # Added the correct table name here
+    __tablename__ = 'home'  # Added the correct table name here
     id = db.Column(db.Integer, primary_key=True)
-    city = db.Column(db.String, nullable=False)
-    year = db.Column(db.Integer, nullable=False)
-    value = db.Column(db.Float, nullable=False)
+    City = db.Column(db.String, nullable=False)
+    Date = db.Column(db.String, nullable=False) 
+    HomeValue = db.Column(db.Float, nullable=False)
 
 class Temperature(db.Model):
     __bind_key__ = 'temperature'
-    __tablename__ = 'temperature_data'  # Added the correct table name here
+    __tablename__ = 'temp'  # Added the correct table name here
     id = db.Column(db.Integer, primary_key=True)
-    city = db.Column(db.String, nullable=False)
-    year = db.Column(db.Integer, nullable=False)
-    temperature = db.Column(db.Float, nullable=False)
+    City = db.Column(db.String, nullable=False)
+    Date = db.Column(db.Integer, nullable=False)
+    Temperature = db.Column(db.Float, nullable=False)
 
 with app.app_context():
     engine_home = db.engines['homevalue']
@@ -36,29 +41,54 @@ with app.app_context():
 
 @app.route('/')
 def index():
-    return render_template('index_updated.html')
+    return render_template('index.html')
 
-@app.route('/data/home_value/<city>')
-def get_home_value(city):
-    data = HomeValue.query.filter_by(city=city).all()
-    years = [x.year for x in data]
-    values = [x.value for x in data]
-    graph = {
-        'data': [{'x': years, 'y': values, 'type': 'line', 'name': city}],
-        'layout': {'title': f'Home Value for 1 bedroom over the past 5 years in {city}'}
-    }
-    return json.dumps([graph], cls=plotly.utils.PlotlyJSONEncoder)
+@app.route('/api/data/home/', methods=['GET'])
+def get_data_home():
+    conn = sqlite3.connect('home.db')
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM home")
+    rows = cursor.fetchall()
+    conn.close()
+    return jsonify({'data': rows})
 
-@app.route('/data/temperature/<city>')
-def get_temperature(city):
-    data = Temperature.query.filter_by(city=city).all()
-    years = [x.year for x in data]
-    temps = [x.temperature for x in data]
-    graph = {
-        'data': [{'x': years, 'y': temps, 'type': 'line', 'name': city}],
-        'layout': {'title': f'Temperature over the past 5 years in {city}'}
-    }
-    return json.dumps([graph], cls=plotly.utils.PlotlyJSONEncoder)
+
+@app.route('/api/data/temp/', methods=['GET'])
+def get_data_temp():
+    conn = sqlite3.connect('temp.db')
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM temp")
+    rows = cursor.fetchall()
+    conn.close()
+    return jsonify({'data': rows})
+
+
+
+@app.route('/api/data/home/<string:city>', methods=['GET'])
+def get_data_home_city(city):
+    conn = sqlite3.connect('home.db')
+    cursor = conn.cursor()
+    query = "SELECT Date, HomeValue FROM home WHERE LOWER(TRIM(City)) = LOWER(TRIM(?))"
+    cursor.execute(query, (city,))
+    rows = cursor.fetchall()
+    conn.close()
+    dates = [row[0] for row in rows]
+    home_values = [row[1] for row in rows]
+    return jsonify({'dates': dates, 'home_values': home_values})
+
+
+@app.route('/api/data/temp/<string:city>', methods=['GET'])
+def get_data_temp_city(city):
+    conn = sqlite3.connect('temp.db')
+    cursor = conn.cursor()
+    query = "SELECT Date, Temperature FROM temp WHERE LOWER(TRIM(City)) = LOWER(TRIM(?))"
+    cursor.execute(query, (city,))
+    rows = cursor.fetchall()
+    conn.close()
+    dates = [row[0] for row in rows]
+    temperatures = [row[1] for row in rows]
+    return jsonify({'dates': dates, 'temperatures': temperatures})
 
 if __name__ == '__main__':
     app.run(debug=True)
+

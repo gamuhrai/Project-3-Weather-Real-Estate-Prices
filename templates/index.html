@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>City Map</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <style>
+        #map {
+            height: 500px;
+            margin-bottom: 20px;
+        }
+        select {
+            padding: 5px;
+            margin-bottom: 20px;
+            width: 150px;
+        }
+        
+        #charts-container {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+        }
+
+        canvas {
+            width: 700px !important; /* Reduced width */
+            height: 350px !important; /* Reduced height */
+        }
+
+    </style>
+</head>
+<body>
+
+    <h1>Home Value & Temperature City Map</h1>
+
+
+    <div id="map"></div>
+    <label for="citySelector">Select a city:</label>
+    <select id="citySelector"></select>
+
+    <div id="charts-container">
+        <canvas id="homeChart"></canvas>
+        <canvas id="tempChart"></canvas>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.4"></script>
+    <!-- ==================================================================================================== -->
+    <script>
+    var map = L.map('map').setView([37.0902, -95.7129], 4);
+        
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+        
+        var cities = [
+            { name: 'New York', latlng: [40.7128, -74.0060] },
+            { name: 'Boston', latlng: [42.3601, -71.0589] },
+            { name: 'Miami', latlng: [25.7617, -80.1918] },
+            { name: 'Atlanta', latlng: [33.7490, -84.3880] },
+            { name: 'Chicago', latlng: [41.8781, -87.6298] },
+            { name: 'Minneapolis', latlng: [44.9778, -93.2650] },
+            { name: 'Dallas', latlng: [32.7767, -96.7970] },
+            { name: 'Houston', latlng: [29.7604, -95.3698] },
+            { name: 'Los Angeles', latlng: [34.0522, -118.2437] },
+            { name: 'San Francisco', latlng: [37.7749, -122.4194] },
+            { name: 'Seattle', latlng: [47.6062, -122.3321] },
+            { name: 'Phoenix', latlng: [33.4484, -112.0740] },
+            { name: 'Las Vegas', latlng: [36.1699, -115.1398] },
+            { name: 'Denver', latlng: [39.7392, -104.9903] }
+        ];
+        
+        var markersLayer = L.layerGroup().addTo(map);
+
+        var citySelector = document.getElementById('citySelector');
+
+        cities.forEach(function(city, index) {
+            var option = document.createElement('option');
+            option.value = index;
+            option.textContent = city.name;
+            citySelector.appendChild(option);
+
+            var marker = L.marker(city.latlng).bindPopup(city.name);
+            markersLayer.addLayer(marker);
+        }); 
+        // Implement swipe gestures for map navigation
+        var touchStartX = 0;
+        var touchEndX = 0;
+
+        map.on('touchstart', function (e) {
+            touchStartX = e.touches[0].clientX;
+        });
+
+        map.on('touchend', function (e) {
+            touchEndX = e.changedTouches[0].clientX;
+
+            if (touchStartX - touchEndX > 50) {
+                map.panBy([200, 0]);
+            } else if (touchEndX - touchStartX > 50) {
+                map.panBy([-200, 0]);
+            }
+        });
+
+        // Implement smooth transition for map zoom
+        map.on('zoomstart', function () {
+            map.setZoom(map.getZoom(), { animate: true });
+        });
+
+        // 在这里把 cities 和 citySelector 添加到全局作用域
+        window.cities = cities;
+        window.citySelector = citySelector;
+    </script>
+<!-- ==================================================================================================== -->
+
+
+</script>
+
+
+
+<!-- ==================================================================================================== -->
+
+<script>
+    var homeChart; // 将homeChart定义为全局变量
+
+    async function fetchhomeData(city) {
+        try {
+            const response = await fetch(`/api/data/home/${encodeURIComponent(city)}`);
+            if (!response.ok) {
+                throw new Error('Network response was not ok ' + response.statusText);
+            }
+            const data = await response.json();
+            return data;
+        } catch (error) {
+            console.error('There has been a problem with your fetch operation:', error);
+            // 返回一个空对象或者其他默认值
+            return {};
+        }
+    }
+
+    async function drawGraph(data) {
+        const ctx = document.getElementById('homeChart').getContext('2d');
+        if (homeChart) {
+            homeChart.destroy();
+        }
+        homeChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: data.dates,
+                datasets: [{
+                    label: 'Home Values',
+                    data: data.home_values,
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: false
+                    }
+                }
+            }
+        });
+    }
+
+    async function updatehomeGraph(city) {
+        const data = await fetchhomeData(city);
+        if (data && data.dates && data.home_values) { // 确保 data 和其属性是有效的
+            drawGraph(data);
+        } else {
+            console.error('Failed to fetch or invalid data for city:', city);
+        }
+    }
+    
+    citySelector.addEventListener('change', function () {
+        var selectedIndex = citySelector.value;
+        var selectedCity = cities[selectedIndex];
+        console.log("Selected City:", selectedCity);
+        updatehomeGraph(selectedCity.name);
+        map.setView(selectedCity.latlng, 12);
+    });
+    
+    updatehomeGraph(cities[0].name);
+</script>
+
+<script>
+    var tempChart;
+    
+    async function fetchtempData(city) {
+        try {
+            const response = await fetch(`/api/data/temp/${encodeURIComponent(city)}`);
+            if (!response.ok) {
+                throw new Error('Network response was not ok ' + response.statusText);
+            }
+            const data = await response.json();
+            return data;
+        } catch (error) {
+            console.error('There has been a problem with your fetch operation:', error);
+            return {};
+        }
+    }
+
+    async function drawTempGraph(data) {
+    // Log the data to the console
+    console.log('Data passed to drawTempGraph:', data);
+
+    const ctx = document.getElementById('tempChart').getContext('2d');
+    if (tempChart) {
+        tempChart.destroy();
+    }
+    tempChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: data.dates,
+            datasets: [{
+                label: 'Temperature',
+                data: data.temperatures,
+                borderColor: 'rgba(255, 99, 132, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: false
+                }
+            }
+        }
+    });
+}
+
+
+    async function updatetempGraph(city) {
+    const data = await fetchtempData(city);
+    
+    // Log the fetched data to the console for inspection.
+    console.log("Fetched data for", city, ":", data);
+    
+    if (data && data.dates && data.temperatures) {
+        drawTempGraph(data);
+    } else {
+        console.error('Failed to fetch or invalid data for temperature:', city);
+    }
+}
+
+
+    citySelector.addEventListener('change', function () {
+        var selectedIndex = citySelector.value;
+        var selectedCity = cities[selectedIndex];
+        console.log("Selected City:", selectedCity);
+        updatetempGraph(selectedCity.name);
+        map.setView(selectedCity.latlng, 12);
+    });
+    
+    updatetempGraph(cities[0].name);
+</script>
+
+<!-- ==================================================================================================== -->
+ 
+<script>
+    var myArray = [1, 2, 3, 4, 5];  // Example: Defining myArray
+    console.log(myArray);
+    // console.log(Results);  // You can comment this out if Results is not defined
+</script>
+
+<script>
+    var homeResults = fetchhomeResults(); 
+    var tempResults = fetchtempResults(); // Example: Assuming fetchResults is a function that gets the results
+    console.log(Results);
+</script>
+
+<script>
+    if (typeof Results !== 'undefined') {
+        console.log(Results);
+    } else {
+        console.log("Results is not defined");
+    }
+</script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', (event) => {
+        if (typeof Results !== 'undefined') {
+            console.log(Results);
+        } else {
+            console.log("Results is not defined");
+        }
+    });
+</script>
+
+</body>
+</html>
