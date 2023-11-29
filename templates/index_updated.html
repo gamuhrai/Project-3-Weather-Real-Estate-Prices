@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <title>City Marker Map</title>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -76,7 +77,6 @@
         <div id="home-value-slider" class="slider"></div>
         <div id="home-value-slider-value">Current: $90,000 to $1,800,000</div>
     </div>
-    
 
     <!-- Existing Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
@@ -151,8 +151,6 @@
             }
         });
 
-
-        
         // Optional: Add event listeners to sliders if you want to perform actions when values change
         tempSlider.noUiSlider.on('update', function(values, handle) {
             document.getElementById('temp-slider-value').textContent = 'Current: ' + Math.round(values[0]) + ' to ' + Math.round(values[1]);
@@ -162,40 +160,39 @@
             document.getElementById('home-value-slider-value').textContent = 'Current: $' + Math.round(values[0]).toLocaleString() + ' to $' + Math.round(values[1]).toLocaleString();
         });
 
-
         // Temperature CSV fetch and heatmap layer creation
         var heatArray = [];
 
-// Use fetch to read the CSV file
-            fetch('/Users/jeanjin/Desktop/DSBC/project_3/data/monthly_avg_temperatures_lastday.csv')
+        // Use fetch to read the CSV file
+        fetch('/Users/jeanjin/Desktop/DSBC/project_3/data/monthly_avg_temperatures_lastday.csv')
              .then(response => response.text())
              .then(data => {
-        // Parse the CSV data
-             const lines = data.split('\n');
-             const headers = lines[0].split(',');
+                // Parse the CSV data
+                const lines = data.split('\n');
+                const headers = lines[0].split(',');
 
-        // Assuming the first column is the date/time
-              for (let i = 1; i < lines.length; i++) {
-                 const cells = lines[i].split(',');
+                // Assuming the first column is the date/time
+                for (let i = 1; i < lines.length; i++) {
+                    const cells = lines[i].split(',');
 
-                 for (let j = 1; j < headers.length; j += 3) {
-                const cityName = headers[j].split('_')[2];
-                const cityData = cities.find(c => c.name.includes(cityName));
-                if (cityData) {
-                    // We're using mean temperature for now; adjust accordingly if needed
-                    const temp = parseFloat(cells[j]);
+                    for (let j = 1; j < headers.length; j += 3) {
+                        const cityName = headers[j].split('_')[2];
+                        const cityData = cities.find(c => c.name.includes(cityName));
+                        if (cityData) {
+                            // We're using mean temperature for now; adjust accordingly if needed
+                            const temp = parseFloat(cells[j]);
 
-                    // The format for the heatmap is [lat, lon, intensity]
-                    // Intensity is the temperature in this case
-                    heatArray.push([cityData.latlng[0], cityData.latlng[1], temp]);
+                            // The format for the heatmap is [lat, lon, intensity]
+                            // Intensity is the temperature in this case
+                            heatArray.push([cityData.latlng[0], cityData.latlng[1], temp]);
+                        }
+                    }
                 }
-            }
-        }
 
-                 if (heatArray.length > 0) {
-                     const heat = L.heatLayer(heatArray, { radius: 25 }).addTo(map);
-                 }
-             });
+                if (heatArray.length > 0) {
+                    const heat = L.heatLayer(heatArray, { radius: 25 }).addTo(map);
+                }
+            });
         
         // Implement swipe gestures for map navigation
         var touchStartX = 0;
@@ -219,9 +216,46 @@
         map.on('zoomstart', function () {
             map.setZoom(map.getZoom(), { animate: true });
         });
-        
-        // Add the other sections of your code (e.g., for gestures, smooth transition) here
 
+        // Function to load and display the price vs. date graph
+        
+        function loadPriceVsDateGraph(city) {
+            fetch(`/data/home_value/${city}`)
+                .then(response => response.json())
+                .then(data => {
+                    var graphData = data[0];
+                    Plotly.newPlot('price-vs-date-graph', graphData.data, graphData.layout);
+                })
+                .catch(error => console.error(error));
+        }
+
+        // Function to load and display the temperature vs. date graph
+        function loadTemperatureVsDateGraph(city) {
+            fetch(`/data/temperature/${city}`)
+                .then(response => response.json())
+                .then(data => {
+                    var graphData = data[0];
+                    Plotly.newPlot('temperature-vs-date-graph', graphData.data, graphData.layout);
+                })
+                .catch(error => console.error(error));
+        }
+        
+        // Attach event listeners to the citySelector dropdown
+        citySelector.addEventListener('change', function () {
+            var selectedIndex = citySelector.value;
+            var selectedCity = cities[selectedIndex];
+            
+            // Load and display the price vs. date and temperature vs. date graphs for the selected city
+            loadPriceVsDateGraph(selectedCity.name);
+            loadTemperatureVsDateGraph(selectedCity.name);
+            
+            // Update the map view
+            map.setView(selectedCity.latlng, 12);
+        });
     </script>
+    <div id="price-vs-date-graph" style="height: 400px;"></div>
+    
+
+    <div id="temperature-vs-date-graph" style="height: 400px;"></div>
 </body>
 </html>
