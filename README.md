@@ -1,4 +1,4 @@
-Project 3: Home Value & Temperature City Map
+# Project 3: Home Value & Temperature City Map
 Presented by: Group 3 - Connor Crowley, David Gamarran, Ziye Jin
 
 Project Goal
