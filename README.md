@@ -51,19 +51,23 @@ Added city markers with swipe and zoom functionalities.
 
 Dropdown populated with city names.
 Event listener updates map and charts based on city selection.
-Home Value Chart:
+
+### 5. Home Value Chart:
 
 Fetched data via server-side API.
 Chart.js used to visualize home value trends.
 Dynamic chart updates based on selected city.
-Temperature Chart:
+
+### 6. Temperature Chart:
 
 Similar setup as home value chart.
 Displays temperature trends over time.
-Miscellaneous Scripts:
+
+### 7. Miscellaneous Scripts:
 
 Includes additional scripts for examples and checks (e.g., Results variable).
-Event Listeners:
+
+### 8. Event Listeners:
 
 Listeners for dropdown selection to update visuals.
 
