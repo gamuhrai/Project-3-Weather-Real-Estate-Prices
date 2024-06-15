@@ -72,7 +72,7 @@ Includes additional scripts for examples and checks (e.g., Results variable).
 Listeners for dropdown selection to update visuals.
 
 
-Conclusion
+## Conclusion
 Our analysis of major U.S. cities showed varied trends in home values, with notable decreases in San Francisco, Seattle, and Minneapolis. However, temperature variations did not consistently correlate with these trends across all cities. Our application serves as a tool for homebuyers to consider climate factors, despite inconclusive correlations found in our data.
 
 Due to time constraints, features such as sunshine hours tracking, air quality monitoring, and broader home type analysis were not implemented. These areas will be addressed in future updates for enhanced application functionality.
